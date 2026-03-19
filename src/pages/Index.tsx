@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import WeatherCard from "@/components/WeatherCard";
 import BudgetInput from "@/components/BudgetInput";
 import RecommendationCard from "@/components/RecommendationCard";
+import ProductEntry from "@/components/ProductEntry";
 import DailyInsight from "@/components/DailyInsight";
 import Sidebar from "@/components/Sidebar";
 import BottomNav from "@/components/BottomNav";
