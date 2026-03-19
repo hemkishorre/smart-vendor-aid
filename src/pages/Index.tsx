@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import WeatherCard from "@/components/WeatherCard";
 import BudgetInput from "@/components/BudgetInput";
 import RecommendationCard from "@/components/RecommendationCard";
+import ProductEntry from "@/components/ProductEntry";
 import DailyInsight from "@/components/DailyInsight";
 import Sidebar from "@/components/Sidebar";
 import BottomNav from "@/components/BottomNav";
@@ -56,8 +57,10 @@ const Index = () => {
           insight="Festival week — dairy demand is high!"
         />
       </div>
-
-      <BudgetInput onSubmit={handleBudgetSubmit} isLoading={isLoading} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <BudgetInput onSubmit={handleBudgetSubmit} isLoading={isLoading} />
+        <ProductEntry />
+      </div>
 
       <AnimatePresence>
         {showRecommendations && (
@@ -90,7 +93,10 @@ const Index = () => {
         <h2 className="font-display font-bold text-2xl lg:text-3xl text-foreground">Smart Recommendations</h2>
         <p className="text-sm text-muted-foreground mb-4">Based on weather, festivals & trends</p>
       </motion.div>
-      <BudgetInput onSubmit={handleBudgetSubmit} isLoading={isLoading} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <BudgetInput onSubmit={handleBudgetSubmit} isLoading={isLoading} />
+        <ProductEntry />
+      </div>
       {showRecommendations && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {mockRecommendations.map((rec, i) => (
