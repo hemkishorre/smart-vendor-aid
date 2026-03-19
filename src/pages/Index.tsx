@@ -57,8 +57,9 @@ const Index = () => {
           insight="Festival week — dairy demand is high!"
         />
       </div>
-
-      <BudgetInput onSubmit={handleBudgetSubmit} isLoading={isLoading} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <BudgetInput onSubmit={handleBudgetSubmit} isLoading={isLoading} />
+        <ProductEntry />
 
       <AnimatePresence>
         {showRecommendations && (
