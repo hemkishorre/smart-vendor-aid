@@ -4,10 +4,12 @@ import WeatherCard from "@/components/WeatherCard";
 import BudgetInput from "@/components/BudgetInput";
 import RecommendationCard from "@/components/RecommendationCard";
 import DailyInsight from "@/components/DailyInsight";
+import Sidebar from "@/components/Sidebar";
 import BottomNav from "@/components/BottomNav";
 import ChatView from "@/components/ChatView";
 import ProfileView from "@/components/ProfileView";
 import { ShoppingBag } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const mockRecommendations = [
   { product: "Tomato", emoji: "🍅", quantity: "30 kg", reason: "Rain expected → demand may drop", trend: "down" as const },
@@ -21,6 +23,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleBudgetSubmit = (budget: number) => {
     setIsLoading(true);
@@ -31,27 +34,28 @@ const Index = () => {
   };
 
   const renderHome = () => (
-    <div className="px-4 py-4 space-y-4 pb-24">
+    <div className="space-y-6">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <h1 className="font-display font-black text-2xl text-foreground">
-          SmartStock <span className="text-primary">AI</span>
-        </h1>
-        <p className="text-sm text-muted-foreground">Smart purchasing for smart vendors</p>
+        <h2 className="font-display font-black text-2xl lg:text-3xl text-foreground">
+          Dashboard
+        </h2>
+        <p className="text-sm text-muted-foreground">Overview of today's market intelligence</p>
       </motion.div>
 
-      <WeatherCard
-        weather="rainy"
-        temperature={28}
-        humidity={82}
-        riskLevel="Medium"
-        location="Chennai, Tamil Nadu"
-      />
-
-      <DailyInsight
-        bestProduct="Milk"
-        bestEmoji="🥛"
-        insight="Festival week — dairy demand is high!"
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <WeatherCard
+          weather="rainy"
+          temperature={28}
+          humidity={82}
+          riskLevel="Medium"
+          location="Chennai, Tamil Nadu"
+        />
+        <DailyInsight
+          bestProduct="Milk"
+          bestEmoji="🥛"
+          insight="Festival week — dairy demand is high!"
+        />
+      </div>
 
       <BudgetInput onSubmit={handleBudgetSubmit} isLoading={isLoading} />
 
@@ -61,7 +65,7 @@ const Index = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="space-y-3"
+            className="space-y-4"
           >
             <div className="flex items-center gap-2 pt-2">
               <ShoppingBag className="w-5 h-5 text-primary" />
@@ -69,9 +73,11 @@ const Index = () => {
                 Recommendations
               </h3>
             </div>
-            {mockRecommendations.map((rec, i) => (
-              <RecommendationCard key={rec.product} {...rec} index={i} />
-            ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {mockRecommendations.map((rec, i) => (
+                <RecommendationCard key={rec.product} {...rec} index={i} />
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -79,14 +85,14 @@ const Index = () => {
   );
 
   const renderRecommend = () => (
-    <div className="px-4 py-4 space-y-4 pb-24">
+    <div className="space-y-6">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <h2 className="font-display font-bold text-xl text-foreground">Smart Recommendations</h2>
+        <h2 className="font-display font-bold text-2xl lg:text-3xl text-foreground">Smart Recommendations</h2>
         <p className="text-sm text-muted-foreground mb-4">Based on weather, festivals & trends</p>
       </motion.div>
       <BudgetInput onSubmit={handleBudgetSubmit} isLoading={isLoading} />
       {showRecommendations && (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {mockRecommendations.map((rec, i) => (
             <RecommendationCard key={rec.product} {...rec} index={i} />
           ))}
@@ -95,15 +101,31 @@ const Index = () => {
     </div>
   );
 
-  return (
-    <div className="min-h-screen bg-background max-w-lg mx-auto relative">
-      <div className="h-[calc(100vh-60px)] overflow-y-auto">
-        {activeTab === "home" && renderHome()}
-        {activeTab === "recommend" && renderRecommend()}
-        {activeTab === "chat" && <ChatView />}
-        {activeTab === "profile" && <ProfileView />}
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background max-w-lg mx-auto relative">
+        <div className="h-[calc(100vh-60px)] overflow-y-auto px-4 py-4 pb-24">
+          {activeTab === "home" && renderHome()}
+          {activeTab === "recommend" && renderRecommend()}
+          {activeTab === "chat" && <ChatView />}
+          {activeTab === "profile" && <ProfileView />}
+        </div>
+        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex">
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <main className="flex-1 overflow-y-auto h-screen">
+        <div className="max-w-5xl mx-auto p-8">
+          {activeTab === "home" && renderHome()}
+          {activeTab === "recommend" && renderRecommend()}
+          {activeTab === "chat" && <ChatView />}
+          {activeTab === "profile" && <ProfileView />}
+        </div>
+      </main>
     </div>
   );
 };
