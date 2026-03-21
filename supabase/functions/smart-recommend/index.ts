@@ -39,11 +39,16 @@ serve(async (req) => {
   }
 
   try {
-    const { budget, existingProducts } = await req.json();
+    const { budget, existingProducts, weather } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     let userMessage = `My budget is ₹${budget}.`;
+    
+    if (weather) {
+      userMessage += ` Current weather: ${weather.weather} (${weather.description}), temperature: ${weather.temperature}°C, humidity: ${weather.humidity}%, location: ${weather.location}, risk level: ${weather.riskLevel}.`;
+    }
+    
     if (existingProducts && existingProducts.length > 0) {
       const items = existingProducts
         .filter((p: any) => p.name)
