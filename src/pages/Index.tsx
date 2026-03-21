@@ -1,15 +1,14 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import WeatherCard from "@/components/WeatherCard";
-import BudgetInput from "@/components/BudgetInput";
+import BudgetAndProducts from "@/components/BudgetAndProducts";
 import RecommendationCard from "@/components/RecommendationCard";
-import ProductEntry from "@/components/ProductEntry";
 import DailyInsight from "@/components/DailyInsight";
 import Sidebar from "@/components/Sidebar";
 import BottomNav from "@/components/BottomNav";
 import ChatView from "@/components/ChatView";
 import ProfileView from "@/components/ProfileView";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/hooks/use-toast";
 
@@ -20,6 +19,16 @@ interface Recommendation {
   estimatedCost: number;
   reason: string;
   trend: "up" | "down" | "stable";
+}
+
+interface WeatherData {
+  weather: "sunny" | "rainy" | "cloudy" | "stormy";
+  temperature: number;
+  humidity: number;
+  riskLevel: "Low" | "Medium" | "High";
+  location: string;
+  description: string;
+  windSpeed: number;
 }
 
 interface Product {
@@ -35,14 +44,68 @@ const Index = () => {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [insight, setInsight] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
   const isMobile = useIsMobile();
-  const productsRef = useRef<Product[]>([]);
 
-  const handleProductsChange = (products: Product[]) => {
-    productsRef.current = products;
+  useEffect(() => {
+    fetchWeather();
+  }, []);
+
+  const fetchWeather = async (lat?: number, lon?: number) => {
+    setWeatherLoading(true);
+    try {
+      const body: any = {};
+      if (lat && lon) {
+        body.lat = lat;
+        body.lon = lon;
+      } else {
+        body.city = "Chennai";
+      }
+
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-weather`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify(body),
+        }
+      );
+
+      if (!resp.ok) throw new Error("Weather fetch failed");
+      const data = await resp.json();
+      setWeatherData(data);
+    } catch (e) {
+      console.error("Weather error:", e);
+      // Fallback
+      setWeatherData({
+        weather: "cloudy",
+        temperature: 30,
+        humidity: 70,
+        riskLevel: "Low",
+        location: "Chennai, IN",
+        description: "partly cloudy",
+        windSpeed: 3,
+      });
+    } finally {
+      setWeatherLoading(false);
+    }
   };
 
-  const handleBudgetSubmit = async (budget: number) => {
+  // Try geolocation on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
+        () => {} // silently fall back to default city
+      );
+    }
+  }, []);
+
+  const handleBudgetSubmit = async (budget: number, products: Product[]) => {
     setIsLoading(true);
     setRecommendations([]);
     try {
@@ -56,7 +119,8 @@ const Index = () => {
           },
           body: JSON.stringify({
             budget,
-            existingProducts: productsRef.current.filter((p) => p.name),
+            existingProducts: products,
+            weather: weatherData,
           }),
         }
       );
@@ -87,23 +151,27 @@ const Index = () => {
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <WeatherCard
-          weather="rainy"
-          temperature={28}
-          humidity={82}
-          riskLevel="Medium"
-          location="Chennai, Tamil Nadu"
-        />
+        {weatherLoading ? (
+          <div className="rounded-2xl p-5 gradient-sky text-primary-foreground shadow-elevated flex items-center justify-center min-h-[140px]">
+            <Loader2 className="w-6 h-6 animate-spin" />
+          </div>
+        ) : weatherData ? (
+          <WeatherCard
+            weather={weatherData.weather}
+            temperature={weatherData.temperature}
+            humidity={weatherData.humidity}
+            riskLevel={weatherData.riskLevel}
+            location={weatherData.location}
+          />
+        ) : null}
         <DailyInsight
           bestProduct="Milk"
           bestEmoji="🥛"
           insight={insight || "Festival week — dairy demand is high!"}
         />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <BudgetInput onSubmit={handleBudgetSubmit} isLoading={isLoading} />
-        <ProductEntry onProductsChange={handleProductsChange} />
-      </div>
+
+      <BudgetAndProducts onSubmit={handleBudgetSubmit} isLoading={isLoading} />
 
       <AnimatePresence>
         {recommendations.length > 0 && (
@@ -136,10 +204,7 @@ const Index = () => {
         <h2 className="font-display font-bold text-2xl lg:text-3xl text-foreground">Smart Recommendations</h2>
         <p className="text-sm text-muted-foreground mb-4">Powered by AI — based on weather, festivals & trends</p>
       </motion.div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <BudgetInput onSubmit={handleBudgetSubmit} isLoading={isLoading} />
-        <ProductEntry onProductsChange={handleProductsChange} />
-      </div>
+      <BudgetAndProducts onSubmit={handleBudgetSubmit} isLoading={isLoading} />
       {recommendations.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {recommendations.map((rec, i) => (
