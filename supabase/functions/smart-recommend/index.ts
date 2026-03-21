@@ -6,9 +6,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are SmartStock AI recommendation engine for Indian shopkeepers. Given a budget and optionally a list of products the user already plans to buy, return structured purchase recommendations.
+const SYSTEM_PROMPT = `You are SmartStock AI recommendation engine for Indian shopkeepers. Given a budget, current weather conditions, and optionally a list of products the user already plans to buy, return structured purchase recommendations.
 
-Consider weather (assume current season in India), upcoming festivals, and demand patterns.
+Use the provided real-time weather data to make accurate predictions. Consider upcoming festivals and demand patterns.
 
 You MUST respond with valid JSON only, no markdown, no explanation outside JSON. Return this exact structure:
 {
