@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, Loader2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface Message {
   id: number;
@@ -8,43 +11,107 @@ interface Message {
   content: string;
 }
 
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/smart-chat`;
+
 const initialMessages: Message[] = [
   {
     id: 1,
     role: "assistant",
-    content: "🙏 Welcome! I'm your SmartStock assistant.\n\nTell me your **budget** and I'll suggest what to buy today based on weather and demand trends!",
+    content: "🙏 Welcome! I'm your **SmartStock AI** assistant.\n\nTell me your **budget** and I'll suggest what to buy today based on weather and demand trends!",
   },
 ];
-
-const mockResponses: Record<string, string> = {
-  default:
-    "Based on current conditions:\n\n🍅 **Tomato** – Buy 30kg (₹40/kg)\n→ Rain expected, demand may drop\n\n🧅 **Onion** – Buy 20kg (₹30/kg)\n→ Stable demand\n\n🥛 **Milk** – Stock 50L\n→ Festival week, high demand!\n\nTotal estimate: **₹3,100**",
-};
 
 const ChatView = () => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, isTyping]);
+  }, [messages, isStreaming]);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
+  const sendMessage = async () => {
+    if (!input.trim() || isStreaming) return;
     const userMsg: Message = { id: Date.now(), role: "user", content: input };
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setInput("");
-    setIsTyping(true);
+    setIsStreaming(true);
 
-    setTimeout(() => {
-      setIsTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now() + 1, role: "assistant", content: mockResponses.default },
-      ]);
-    }, 1500);
+    let assistantContent = "";
+
+    try {
+      const resp = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          messages: updatedMessages
+            .filter((m) => m.id !== 1)
+            .map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || `Error ${resp.status}`);
+      }
+
+      if (!resp.body) throw new Error("No stream body");
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, newlineIndex);
+          buffer = buffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              assistantContent += content;
+              setMessages((prev) => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant" && last.id === -1) {
+                  return prev.map((m, i) =>
+                    i === prev.length - 1 ? { ...m, content: assistantContent } : m
+                  );
+                }
+                return [...prev, { id: -1, role: "assistant", content: assistantContent }];
+              });
+            }
+          } catch {
+            buffer = line + "\n" + buffer;
+            break;
+          }
+        }
+      }
+
+      // Finalize the assistant message with a real ID
+      setMessages((prev) =>
+        prev.map((m) => (m.id === -1 ? { ...m, id: Date.now() + 1 } : m))
+      );
+    } catch (e: any) {
+      console.error("Chat error:", e);
+      toast({ title: "AI Error", description: e.message || "Failed to get response", variant: "destructive" });
+      setMessages((prev) => prev.filter((m) => m.id !== -1));
+    } finally {
+      setIsStreaming(false);
+    }
   };
 
   return (
@@ -76,13 +143,9 @@ const ChatView = () => {
                       : "bg-muted text-foreground rounded-bl-md"
                   }`}
                 >
-                  {msg.content.split("\n").map((line, i) => (
-                    <p key={i} className={line === "" ? "h-2" : ""}>
-                      {line.split("**").map((part, j) =>
-                        j % 2 === 1 ? <strong key={j}>{part}</strong> : part
-                      )}
-                    </p>
-                  ))}
+                  <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0">
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </div>
                 </div>
                 {msg.role === "user" && (
                   <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-1">
@@ -92,7 +155,7 @@ const ChatView = () => {
               </motion.div>
             ))}
           </AnimatePresence>
-          {isTyping && (
+          {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
             <div className="flex gap-2 items-center">
               <div className="w-8 h-8 rounded-full gradient-warm flex items-center justify-center">
                 <Bot className="w-4 h-4 text-primary-foreground" />
@@ -118,16 +181,17 @@ const ChatView = () => {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="Ask about today's purchase..."
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+              placeholder="Ask about today's purchase... (e.g. 'I have ₹5000 budget')"
               className="flex-1 px-4 py-3 rounded-xl bg-muted text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              disabled={isStreaming}
             />
             <button
               onClick={sendMessage}
-              disabled={!input.trim()}
+              disabled={!input.trim() || isStreaming}
               className="w-11 h-11 rounded-xl gradient-warm flex items-center justify-center text-primary-foreground disabled:opacity-40 transition-opacity"
             >
-              <Send className="w-4 h-4" />
+              {isStreaming ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
           </div>
         </div>
