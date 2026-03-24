@@ -1,4 +1,5 @@
-import { Home, MessageSquare, ShoppingBag, User, Package } from "lucide-react";
+import { Home, MessageSquare, ShoppingBag, User, Package, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface SidebarProps {
   activeTab: string;
@@ -6,10 +7,10 @@ interface SidebarProps {
 }
 
 const tabs = [
-  { id: "home", icon: Home, label: "Dashboard" },
-  { id: "recommend", icon: ShoppingBag, label: "Recommendations" },
-  { id: "chat", icon: MessageSquare, label: "AI Chat" },
-  { id: "profile", icon: User, label: "Profile" },
+  { id: "home", icon: Home, label: "Dashboard", gradient: "gradient-warm" },
+  { id: "recommend", icon: ShoppingBag, label: "Recommendations", gradient: "gradient-fresh" },
+  { id: "chat", icon: MessageSquare, label: "AI Chat", gradient: "gradient-sky" },
+  { id: "profile", icon: User, label: "Profile", gradient: "gradient-purple" },
 ];
 
 const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
@@ -17,7 +18,7 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
     <aside className="w-64 bg-card border-r border-border flex flex-col h-screen sticky top-0">
       <div className="p-6 border-b border-border">
         <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl gradient-warm flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl gradient-warm flex items-center justify-center shadow-glow">
             <Package className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
@@ -36,24 +37,25 @@ const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium ${
+              className={`w-full relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium ${
                 isActive
-                  ? "gradient-warm text-primary-foreground shadow-elevated"
+                  ? `${tab.gradient} text-primary-foreground shadow-elevated`
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
             >
               <tab.icon className="w-5 h-5" />
               <span>{tab.label}</span>
+              {isActive && <Sparkles className="w-3 h-3 ml-auto opacity-70" />}
             </button>
           );
         })}
       </nav>
 
       <div className="p-4 border-t border-border">
-        <div className="bg-muted rounded-xl p-3">
-          <p className="text-xs text-muted-foreground">Today's Weather</p>
-          <p className="text-sm font-display font-bold text-foreground">🌧️ Rainy, 28°C</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Risk: Medium</p>
+        <div className="gradient-sunset rounded-xl p-3 text-primary-foreground">
+          <p className="text-xs opacity-80 font-medium">AI Powered</p>
+          <p className="text-sm font-display font-bold">🤖 Smart Insights On</p>
+          <p className="text-xs opacity-70 mt-0.5">Weather + Market data</p>
         </div>
       </div>
     </aside>
