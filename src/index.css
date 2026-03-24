@@ -6,33 +6,33 @@
 
 @layer base {
   :root {
-    --background: 40 33% 97%;
-    --foreground: 20 25% 15%;
+    --background: 45 40% 97%;
+    --foreground: 20 30% 12%;
 
-    --card: 40 30% 99%;
-    --card-foreground: 20 25% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 30% 12%;
 
-    --popover: 40 30% 99%;
-    --popover-foreground: 20 25% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 30% 12%;
 
-    --primary: 36 90% 52%;
-    --primary-foreground: 40 30% 99%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 145 45% 42%;
-    --secondary-foreground: 40 30% 99%;
+    --secondary: 160 55% 40%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 35 20% 92%;
-    --muted-foreground: 20 10% 50%;
+    --muted: 40 30% 93%;
+    --muted-foreground: 20 15% 46%;
 
-    --accent: 12 70% 55%;
-    --accent-foreground: 40 30% 99%;
+    --accent: 280 65% 55%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 35 20% 88%;
-    --input: 35 20% 88%;
-    --ring: 36 90% 52%;
+    --border: 40 25% 88%;
+    --input: 40 25% 88%;
+    --ring: 25 95% 53%;
 
     --radius: 1rem;
 
@@ -48,17 +48,20 @@
     /* Custom tokens */
     --warning: 45 93% 47%;
     --warning-foreground: 20 25% 15%;
-    --success: 145 45% 42%;
-    --success-foreground: 40 30% 99%;
-    --info: 210 70% 55%;
-    --info-foreground: 40 30% 99%;
+    --success: 155 60% 42%;
+    --success-foreground: 0 0% 100%;
+    --info: 200 80% 50%;
+    --info-foreground: 0 0% 100%;
 
-    --gradient-warm: linear-gradient(135deg, hsl(36 90% 52%), hsl(12 70% 55%));
-    --gradient-fresh: linear-gradient(135deg, hsl(145 45% 42%), hsl(160 50% 45%));
-    --gradient-sky: linear-gradient(135deg, hsl(210 70% 55%), hsl(195 60% 50%));
+    --gradient-warm: linear-gradient(135deg, hsl(25 95% 53%), hsl(350 80% 55%));
+    --gradient-fresh: linear-gradient(135deg, hsl(160 55% 40%), hsl(140 70% 45%));
+    --gradient-sky: linear-gradient(135deg, hsl(200 80% 50%), hsl(220 75% 55%));
+    --gradient-purple: linear-gradient(135deg, hsl(280 65% 55%), hsl(320 70% 55%));
+    --gradient-sunset: linear-gradient(135deg, hsl(25 95% 53%), hsl(45 93% 47%));
 
-    --shadow-card: 0 2px 12px -2px hsl(20 25% 15% / 0.06);
-    --shadow-elevated: 0 8px 30px -8px hsl(20 25% 15% / 0.12);
+    --shadow-card: 0 4px 16px -4px hsl(25 95% 53% / 0.08);
+    --shadow-elevated: 0 12px 40px -10px hsl(25 95% 53% / 0.18);
+    --shadow-glow: 0 0 20px hsl(25 95% 53% / 0.15);
 
     --font-display: 'Nunito', sans-serif;
     --font-body: 'Inter', sans-serif;
