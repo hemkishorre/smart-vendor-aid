@@ -212,7 +212,9 @@ const Index = () => {
             className="space-y-4"
           >
             <div className="flex items-center gap-2 pt-2">
-              <ShoppingBag className="w-5 h-5 text-primary" />
+              <div className="w-8 h-8 rounded-lg gradient-sunset flex items-center justify-center">
+                <ShoppingBag className="w-4 h-4 text-primary-foreground" />
+              </div>
               <h3 className="font-display font-bold text-lg text-foreground">
                 AI Recommendations
               </h3>
