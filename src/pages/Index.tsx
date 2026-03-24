@@ -105,6 +105,35 @@ const Index = () => {
     }
   }, []);
 
+  const handleCityChange = (city: string) => {
+    fetchWeatherByCity(city);
+  };
+
+  const fetchWeatherByCity = async (city: string) => {
+    setWeatherLoading(true);
+    try {
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-weather`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ city }),
+        }
+      );
+      if (!resp.ok) throw new Error("Weather fetch failed");
+      const data = await resp.json();
+      setWeatherData(data);
+    } catch (e) {
+      console.error("Weather error:", e);
+      toast({ title: "Error", description: "Could not fetch weather for that city", variant: "destructive" });
+    } finally {
+      setWeatherLoading(false);
+    }
+  };
+
   const handleBudgetSubmit = async (budget: number, products: Product[]) => {
     setIsLoading(true);
     setRecommendations([]);
@@ -162,6 +191,7 @@ const Index = () => {
             humidity={weatherData.humidity}
             riskLevel={weatherData.riskLevel}
             location={weatherData.location}
+            onCityChange={handleCityChange}
           />
         ) : null}
         <DailyInsight
