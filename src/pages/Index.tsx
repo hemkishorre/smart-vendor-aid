@@ -191,6 +191,7 @@ const Index = () => {
             humidity={weatherData.humidity}
             riskLevel={weatherData.riskLevel}
             location={weatherData.location}
+            onCityChange={handleCityChange}
           />
         ) : null}
         <DailyInsight
