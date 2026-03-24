@@ -13,33 +13,35 @@ serve(async (req) => {
 
   try {
     const { lat, lon, city } = await req.json();
-    const API_KEY = Deno.env.get("OPENWEATHER_API_KEY");
-    if (!API_KEY) throw new Error("OPENWEATHER_API_KEY is not configured");
+    const API_KEY = Deno.env.get("TOMORROW_IO_API_KEY");
+    if (!API_KEY) throw new Error("TOMORROW_IO_API_KEY is not configured");
 
-    let url: string;
+    let location: string;
     if (lat && lon) {
-      url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`;
+      location = `${lat},${lon}`;
     } else {
-      const q = city || "Chennai";
-      url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(q)}&units=metric&appid=${API_KEY}`;
+      location = city || "Chennai";
     }
+
+    const url = `https://api.tomorrow.io/v4/weather/realtime?location=${encodeURIComponent(location)}&apikey=${API_KEY}&units=metric`;
 
     const resp = await fetch(url);
     if (!resp.ok) {
       const t = await resp.text();
-      console.error("OpenWeather error:", resp.status, t);
+      console.error("Tomorrow.io error:", resp.status, t);
       throw new Error(`Weather API error: ${resp.status}`);
     }
 
     const data = await resp.json();
+    const values = data.data?.values || {};
 
-    const mainWeather = data.weather?.[0]?.main?.toLowerCase() || "clear";
+    const weatherCode = values.weatherCode || 1000;
     let weatherType: string;
-    if (mainWeather.includes("thunder") || mainWeather.includes("storm")) {
+    if (weatherCode >= 8000) {
       weatherType = "stormy";
-    } else if (mainWeather.includes("rain") || mainWeather.includes("drizzle")) {
+    } else if (weatherCode >= 4000 && weatherCode < 5000) {
       weatherType = "rainy";
-    } else if (mainWeather.includes("cloud") || mainWeather.includes("mist") || mainWeather.includes("fog") || mainWeather.includes("haze")) {
+    } else if (weatherCode >= 1001 && weatherCode < 2000) {
       weatherType = "cloudy";
     } else {
       weatherType = "sunny";
@@ -50,14 +52,16 @@ serve(async (req) => {
     else if (weatherType === "rainy") riskLevel = "Medium";
     else riskLevel = "Low";
 
+    const locationName = data.location?.name || city || "Unknown";
+
     const result = {
       weather: weatherType,
-      temperature: Math.round(data.main?.temp || 0),
-      humidity: data.main?.humidity || 0,
+      temperature: Math.round(values.temperature || 0),
+      humidity: Math.round(values.humidity || 0),
       riskLevel,
-      location: `${data.name}, ${data.sys?.country || ""}`,
-      description: data.weather?.[0]?.description || "",
-      windSpeed: data.wind?.speed || 0,
+      location: locationName,
+      description: weatherType,
+      windSpeed: values.windSpeed || 0,
     };
 
     return new Response(JSON.stringify(result), {
