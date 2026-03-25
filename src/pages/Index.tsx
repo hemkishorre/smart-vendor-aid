@@ -47,6 +47,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
+  const [scannedProducts, setScannedProducts] = useState<Product[]>([]);
   const isMobile = useIsMobile();
 
   useEffect(() => {
