@@ -1,13 +1,15 @@
-import { Home, MessageSquare, ShoppingBag, User, Package, Sparkles } from "lucide-react";
+import { Home, MessageSquare, ShoppingBag, User, Package, Sparkles, Flame, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface SidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onLogout?: () => void;
 }
 
 const tabs = [
   { id: "home", icon: Home, label: "Dashboard", gradient: "gradient-warm" },
+  { id: "demand", icon: Flame, label: "Demanded Products", gradient: "gradient-sunset" },
   { id: "recommend", icon: ShoppingBag, label: "Recommendations", gradient: "gradient-fresh" },
   { id: "chat", icon: MessageSquare, label: "AI Chat", gradient: "gradient-sky" },
   { id: "profile", icon: User, label: "Profile", gradient: "gradient-purple" },
