@@ -53,12 +53,21 @@ const Sidebar = ({ activeTab, onTabChange, onLogout }: SidebarProps) => {
         })}
       </nav>
 
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border space-y-2">
         <div className="gradient-sunset rounded-xl p-3 text-primary-foreground">
           <p className="text-xs opacity-80 font-medium">AI Powered</p>
           <p className="text-sm font-display font-bold">🤖 Smart Insights On</p>
           <p className="text-xs opacity-70 mt-0.5">Weather + Market data</p>
         </div>
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </button>
+        )}
       </div>
     </aside>
   );
