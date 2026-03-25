@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import WeatherCard from "@/components/WeatherCard";
 import BudgetAndProducts from "@/components/BudgetAndProducts";
+import ImageProductScanner from "@/components/ImageProductScanner";
 import RecommendationCard from "@/components/RecommendationCard";
 import DailyInsight from "@/components/DailyInsight";
 import Sidebar from "@/components/Sidebar";
@@ -46,6 +47,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
+  const [scannedProducts, setScannedProducts] = useState<Product[]>([]);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -170,6 +172,17 @@ const Index = () => {
     }
   };
 
+  const handleScannedProducts = (detected: { name: string; quantity: string; unit: string; estimatedPricePerUnit: string }[]) => {
+    const mapped: Product[] = detected.map((p, i) => ({
+      id: Date.now() + i,
+      name: p.name,
+      quantity: p.quantity,
+      unit: p.unit,
+      pricePerUnit: p.estimatedPricePerUnit,
+    }));
+    setScannedProducts(mapped);
+  };
+
   const renderHome = () => (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -201,7 +214,9 @@ const Index = () => {
         />
       </div>
 
-      <BudgetAndProducts onSubmit={handleBudgetSubmit} isLoading={isLoading} />
+      <ImageProductScanner onProductsDetected={handleScannedProducts} />
+
+      <BudgetAndProducts onSubmit={handleBudgetSubmit} isLoading={isLoading} externalProducts={scannedProducts} />
 
       <AnimatePresence>
         {recommendations.length > 0 && (
