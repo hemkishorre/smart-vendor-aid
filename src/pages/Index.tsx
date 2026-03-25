@@ -5,6 +5,8 @@ import BudgetAndProducts from "@/components/BudgetAndProducts";
 import ImageProductScanner from "@/components/ImageProductScanner";
 import RecommendationCard from "@/components/RecommendationCard";
 import DailyInsight from "@/components/DailyInsight";
+import DemandedProductsView from "@/components/DemandedProductsView";
+import AuthPage from "@/components/AuthPage";
 import Sidebar from "@/components/Sidebar";
 import BottomNav from "@/components/BottomNav";
 import ChatView from "@/components/ChatView";
@@ -12,6 +14,8 @@ import ProfileView from "@/components/ProfileView";
 import { ShoppingBag, Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import type { Session } from "@supabase/supabase-js";
 
 interface Recommendation {
   product: string;
@@ -41,6 +45,8 @@ interface Product {
 }
 
 const Index = () => {
+  const [session, setSession] = useState<Session | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("home");
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [insight, setInsight] = useState("");
@@ -51,61 +57,52 @@ const Index = () => {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    fetchWeather();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+    return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (session) fetchWeather();
+  }, [session]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    toast({ title: "Signed out" });
+  };
 
   const fetchWeather = async (lat?: number, lon?: number) => {
     setWeatherLoading(true);
     try {
       const body: any = {};
-      if (lat && lon) {
-        body.lat = lat;
-        body.lon = lon;
-      } else {
-        body.city = "Chennai";
-      }
-
+      if (lat && lon) { body.lat = lat; body.lon = lon; } else { body.city = "Chennai"; }
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-weather`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify(body),
-        }
+        { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` }, body: JSON.stringify(body) }
       );
-
       if (!resp.ok) throw new Error("Weather fetch failed");
-      const data = await resp.json();
-      setWeatherData(data);
+      setWeatherData(await resp.json());
     } catch (e) {
       console.error("Weather error:", e);
-      // Fallback
-      setWeatherData({
-        weather: "cloudy",
-        temperature: 30,
-        humidity: 70,
-        riskLevel: "Low",
-        location: "Chennai, IN",
-        description: "partly cloudy",
-        windSpeed: 3,
-      });
-    } finally {
-      setWeatherLoading(false);
-    }
+      setWeatherData({ weather: "cloudy", temperature: 30, humidity: 70, riskLevel: "Low", location: "Chennai, IN", description: "partly cloudy", windSpeed: 3 });
+    } finally { setWeatherLoading(false); }
   };
 
-  // Try geolocation on mount
   useEffect(() => {
-    if (navigator.geolocation) {
+    if (session && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-        () => {} // silently fall back to default city
+        () => {}
       );
     }
-  }, []);
+  }, [session]);
 
   const handleCityChange = (city: string) => {
     fetchWeatherByCity(city);
@@ -116,24 +113,14 @@ const Index = () => {
     try {
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-weather`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ city }),
-        }
+        { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` }, body: JSON.stringify({ city }) }
       );
       if (!resp.ok) throw new Error("Weather fetch failed");
-      const data = await resp.json();
-      setWeatherData(data);
+      setWeatherData(await resp.json());
     } catch (e) {
       console.error("Weather error:", e);
       toast({ title: "Error", description: "Could not fetch weather for that city", variant: "destructive" });
-    } finally {
-      setWeatherLoading(false);
-    }
+    } finally { setWeatherLoading(false); }
   };
 
   const handleBudgetSubmit = async (budget: number, products: Product[]) => {
@@ -142,97 +129,63 @@ const Index = () => {
     try {
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/smart-recommend`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({
-            budget,
-            existingProducts: products,
-            weather: weatherData,
-          }),
-        }
+        { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` }, body: JSON.stringify({ budget, existingProducts: products, weather: weatherData }) }
       );
-
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || `Error ${resp.status}`);
-      }
-
+      if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(err.error || `Error ${resp.status}`); }
       const data = await resp.json();
       setRecommendations(data.recommendations || []);
       setInsight(data.insight || "");
     } catch (e: any) {
       console.error("Recommend error:", e);
       toast({ title: "Error", description: e.message || "Failed to get recommendations", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
+    } finally { setIsLoading(false); }
   };
 
   const handleScannedProducts = (detected: { name: string; quantity: string; unit: string; estimatedPricePerUnit: string }[]) => {
     const mapped: Product[] = detected.map((p, i) => ({
-      id: Date.now() + i,
-      name: p.name,
-      quantity: p.quantity,
-      unit: p.unit,
-      pricePerUnit: p.estimatedPricePerUnit,
+      id: Date.now() + i, name: p.name, quantity: p.quantity, unit: p.unit, pricePerUnit: p.estimatedPricePerUnit,
     }));
     setScannedProducts(mapped);
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <AuthPage onAuthSuccess={() => {}} />;
+  }
+
   const renderHome = () => (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <h2 className="font-display font-black text-2xl lg:text-3xl text-foreground">
-          Dashboard
-        </h2>
+        <h2 className="font-display font-black text-2xl lg:text-3xl text-foreground">Dashboard</h2>
         <p className="text-sm text-muted-foreground">Overview of today's market intelligence</p>
       </motion.div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {weatherLoading ? (
           <div className="rounded-2xl p-5 gradient-sky text-primary-foreground shadow-elevated flex items-center justify-center min-h-[140px]">
             <Loader2 className="w-6 h-6 animate-spin" />
           </div>
         ) : weatherData ? (
-          <WeatherCard
-            weather={weatherData.weather}
-            temperature={weatherData.temperature}
-            humidity={weatherData.humidity}
-            riskLevel={weatherData.riskLevel}
-            location={weatherData.location}
-            onCityChange={handleCityChange}
-          />
+          <WeatherCard weather={weatherData.weather} temperature={weatherData.temperature} humidity={weatherData.humidity} riskLevel={weatherData.riskLevel} location={weatherData.location} onCityChange={handleCityChange} />
         ) : null}
-        <DailyInsight
-          bestProduct="Milk"
-          bestEmoji="🥛"
-          insight={insight || "Festival week — dairy demand is high!"}
-        />
+        <DailyInsight bestProduct="Milk" bestEmoji="🥛" insight={insight || "Festival week — dairy demand is high!"} />
       </div>
-
       <ImageProductScanner onProductsDetected={handleScannedProducts} />
-
       <BudgetAndProducts onSubmit={handleBudgetSubmit} isLoading={isLoading} externalProducts={scannedProducts} />
-
       <AnimatePresence>
         {recommendations.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-4"
-          >
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-4">
             <div className="flex items-center gap-2 pt-2">
               <div className="w-8 h-8 rounded-lg gradient-sunset flex items-center justify-center">
                 <ShoppingBag className="w-4 h-4 text-primary-foreground" />
               </div>
-              <h3 className="font-display font-bold text-lg text-foreground">
-                AI Recommendations
-              </h3>
+              <h3 className="font-display font-bold text-lg text-foreground">AI Recommendations</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {recommendations.map((rec, i) => (
@@ -267,6 +220,7 @@ const Index = () => {
       <div className="min-h-screen bg-background max-w-lg mx-auto relative">
         <div className="h-[calc(100vh-60px)] overflow-y-auto px-4 py-4 pb-24">
           {activeTab === "home" && renderHome()}
+          {activeTab === "demand" && <DemandedProductsView />}
           {activeTab === "recommend" && renderRecommend()}
           {activeTab === "chat" && <ChatView />}
           {activeTab === "profile" && <ProfileView />}
@@ -278,10 +232,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} onLogout={handleLogout} />
       <main className="flex-1 overflow-y-auto h-screen">
         <div className="max-w-5xl mx-auto p-8">
           {activeTab === "home" && renderHome()}
+          {activeTab === "demand" && <DemandedProductsView />}
           {activeTab === "recommend" && renderRecommend()}
           {activeTab === "chat" && <ChatView />}
           {activeTab === "profile" && <ProfileView />}

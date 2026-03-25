@@ -1,4 +1,4 @@
-import { Home, MessageSquare, ShoppingBag, User } from "lucide-react";
+import { Home, MessageSquare, ShoppingBag, User, Flame } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface BottomNavProps {
@@ -8,6 +8,7 @@ interface BottomNavProps {
 
 const tabs = [
   { id: "home", icon: Home, label: "Home", color: "from-primary to-accent" },
+  { id: "demand", icon: Flame, label: "Demand", color: "from-orange-500 to-red-500" },
   { id: "recommend", icon: ShoppingBag, label: "Buy", color: "from-secondary to-success" },
   { id: "chat", icon: MessageSquare, label: "Chat", color: "from-info to-accent" },
   { id: "profile", icon: User, label: "Profile", color: "from-accent to-primary" },
