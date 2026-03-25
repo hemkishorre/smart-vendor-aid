@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import WeatherCard from "@/components/WeatherCard";
 import BudgetAndProducts from "@/components/BudgetAndProducts";
+import ImageProductScanner from "@/components/ImageProductScanner";
 import RecommendationCard from "@/components/RecommendationCard";
 import DailyInsight from "@/components/DailyInsight";
 import Sidebar from "@/components/Sidebar";
