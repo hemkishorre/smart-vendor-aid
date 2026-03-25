@@ -15,7 +15,7 @@ const tabs = [
   { id: "profile", icon: User, label: "Profile", gradient: "gradient-purple" },
 ];
 
-const Sidebar = ({ activeTab, onTabChange }: SidebarProps) => {
+const Sidebar = ({ activeTab, onTabChange, onLogout }: SidebarProps) => {
   return (
     <aside className="w-64 bg-card border-r border-border flex flex-col h-screen sticky top-0">
       <div className="p-6 border-b border-border">
