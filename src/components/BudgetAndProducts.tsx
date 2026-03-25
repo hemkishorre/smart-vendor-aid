@@ -20,11 +20,20 @@ interface BudgetAndProductsProps {
 const quickAmounts = [500, 1000, 2000, 5000];
 const unitOptions = ["kg", "L", "dozen", "pieces", "bags"];
 
-const BudgetAndProducts = ({ onSubmit, isLoading }: BudgetAndProductsProps) => {
+const BudgetAndProducts = ({ onSubmit, isLoading, externalProducts }: BudgetAndProductsProps) => {
   const [budget, setBudget] = useState("");
   const [products, setProducts] = useState<Product[]>([
     { id: Date.now(), name: "", quantity: "", unit: "kg", pricePerUnit: "" },
   ]);
+
+  useEffect(() => {
+    if (externalProducts && externalProducts.length > 0) {
+      setProducts((prev) => {
+        const hasEmpty = prev.length === 1 && !prev[0].name;
+        return hasEmpty ? externalProducts : [...prev, ...externalProducts];
+      });
+    }
+  }, [externalProducts]);
 
   const addProduct = () => {
     setProducts((prev) => [...prev, { id: Date.now(), name: "", quantity: "", unit: "kg", pricePerUnit: "" }]);
