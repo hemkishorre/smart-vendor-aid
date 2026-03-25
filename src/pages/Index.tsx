@@ -172,6 +172,17 @@ const Index = () => {
     }
   };
 
+  const handleScannedProducts = (detected: { name: string; quantity: string; unit: string; estimatedPricePerUnit: string }[]) => {
+    const mapped: Product[] = detected.map((p, i) => ({
+      id: Date.now() + i,
+      name: p.name,
+      quantity: p.quantity,
+      unit: p.unit,
+      pricePerUnit: p.estimatedPricePerUnit,
+    }));
+    setScannedProducts(mapped);
+  };
+
   const renderHome = () => (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -203,7 +214,9 @@ const Index = () => {
         />
       </div>
 
-      <BudgetAndProducts onSubmit={handleBudgetSubmit} isLoading={isLoading} />
+      <ImageProductScanner onProductsDetected={handleScannedProducts} />
+
+      <BudgetAndProducts onSubmit={handleBudgetSubmit} isLoading={isLoading} externalProducts={scannedProducts} />
 
       <AnimatePresence>
         {recommendations.length > 0 && (
