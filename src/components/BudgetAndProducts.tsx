@@ -14,6 +14,7 @@ interface Product {
 interface BudgetAndProductsProps {
   onSubmit: (budget: number, products: Product[]) => void;
   isLoading?: boolean;
+  externalProducts?: Product[];
 }
 
 const quickAmounts = [500, 1000, 2000, 5000];
