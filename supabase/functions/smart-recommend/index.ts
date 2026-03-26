@@ -6,11 +6,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `You are SmartStock AI recommendation engine for Indian shopkeepers. Given a budget, current weather conditions, and optionally a list of products the user already plans to buy, return structured purchase recommendations.
+const SYSTEM_PROMPT = `You are SmartStock AI — a loss-prevention purchasing advisor for Indian shopkeepers. Your goal is to create a MINIMUM LOSS buying plan based on weather, shelf life, and demand.
 
-Use the provided real-time weather data to make accurate predictions. Consider upcoming festivals and demand patterns.
+Given a budget, real-time weather, and optionally existing products, recommend EXACT quantities to buy that minimize spoilage and waste.
 
-You MUST respond with valid JSON only, no markdown, no explanation outside JSON. Return this exact structure:
+You MUST respond with valid JSON only. Return this exact structure:
 {
   "recommendations": [
     {
@@ -19,19 +19,30 @@ You MUST respond with valid JSON only, no markdown, no explanation outside JSON.
       "quantity": "30 kg",
       "estimatedCost": 1200,
       "reason": "Short reason with weather/festival/demand context",
-      "trend": "up" | "down" | "stable"
+      "trend": "up" | "down" | "stable",
+      "shelfLife": "2 days",
+      "riskLevel": "Low" | "Medium" | "High",
+      "tip": "Store in cool dry place, sell within 2 days"
     }
   ],
   "totalEstimate": 3100,
-  "insight": "One sentence summary of today's market conditions"
+  "insight": "One sentence summary of today's market conditions",
+  "lossPrevention": "Key tip to avoid losses today"
 }
 
 Rules:
 - Total of all estimatedCost should not exceed the budget
 - Recommend 4-6 products
-- Use realistic Indian market prices
-- trend: "up" means demand is increasing, "down" decreasing, "stable" steady
-- Keep reasons under 10 words`;
+- Use realistic Indian market prices (wholesale rates)
+- Focus on MINIMIZING LOSS: consider shelf life vs weather conditions
+- If weather is hot/humid, recommend LESS of perishables, MORE of dry goods
+- If rainy, reduce leafy vegetables, increase items with longer shelf life
+- Provide specific quantities in kg/units that balance demand vs spoilage risk
+- riskLevel: "High" = likely to spoil quickly in current weather, "Low" = safe to stock
+- trend: "up" = demand increasing, "down" = decreasing, "stable" = steady
+- tip: one practical storage/selling tip per product
+- Keep reasons under 12 words
+- lossPrevention: one overall tip based on today's weather`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

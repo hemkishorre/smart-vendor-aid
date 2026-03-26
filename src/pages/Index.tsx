@@ -24,6 +24,9 @@ interface Recommendation {
   estimatedCost: number;
   reason: string;
   trend: "up" | "down" | "stable";
+  shelfLife?: string;
+  riskLevel?: "Low" | "Medium" | "High";
+  tip?: string;
 }
 
 interface WeatherData {
