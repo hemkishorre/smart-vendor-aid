@@ -72,38 +72,15 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
-    if (session) fetchWeather();
-  }, [session]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-    toast({ title: "Signed out" });
-  };
-
-  const fetchWeather = async (lat?: number, lon?: number) => {
-    setWeatherLoading(true);
-    try {
-      const body: any = {};
-      if (lat && lon) { body.lat = lat; body.lon = lon; } else { body.city = "Chennai"; }
-      const resp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-weather`,
-        { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` }, body: JSON.stringify(body) }
-      );
-      if (!resp.ok) throw new Error("Weather fetch failed");
-      setWeatherData(await resp.json());
-    } catch (e) {
-      console.error("Weather error:", e);
-      setWeatherData({ weather: "cloudy", temperature: 30, humidity: 70, riskLevel: "Low", location: "Chennai, IN", description: "partly cloudy", windSpeed: 3 });
-    } finally { setWeatherLoading(false); }
-  };
-
-  useEffect(() => {
-    if (session && navigator.geolocation) {
+    if (!session) return;
+    // Single weather fetch: try geolocation first, fallback to Chennai
+    if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-        () => {}
+        () => fetchWeather() // fallback to default city
       );
+    } else {
+      fetchWeather();
     }
   }, [session]);
 
