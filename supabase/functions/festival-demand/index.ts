@@ -32,7 +32,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an Indian market demand expert. Given the current date and upcoming Indian festivals, return a list of products that will be in high demand.
+            content: `You are an Indian grocery market demand expert. Given the current date and upcoming Indian festivals, return a list of GROCERY ITEMS (food, spices, cooking ingredients, dairy, vegetables, fruits, dry goods, snacks, sweets ingredients) that will be in high demand.
 
 You MUST respond with valid JSON only. Return this exact structure:
 {
@@ -43,35 +43,39 @@ You MUST respond with valid JSON only. Return this exact structure:
       "daysAway": number,
       "demandedProducts": [
         {
-          "product": "Product Name",
+          "product": "Grocery Item Name",
           "emoji": "🎉",
           "demandLevel": "Very High" | "High" | "Medium",
           "expectedPriceChange": "+15%" | "-5%" | "stable",
           "reason": "Short reason why demand increases",
-          "suggestedStockUp": "2 weeks before"
+          "suggestedStockUp": "2 weeks before",
+          "category": "Spices" | "Dairy" | "Vegetables" | "Fruits" | "Dry Goods" | "Oils" | "Sweets" | "Snacks" | "Grains" | "Beverages"
         }
       ]
     }
   ],
   "generalTrending": [
     {
-      "product": "Product Name",
+      "product": "Grocery Item Name",
       "emoji": "🍅",
       "demandLevel": "High",
       "reason": "Seasonal/weather reason",
-      "expectedPriceChange": "+10%"
+      "expectedPriceChange": "+10%",
+      "category": "Vegetables" | "Fruits" | "Dairy" | "Spices" | "Grains" | "Oils" | "Beverages" | "Dry Goods"
     }
   ],
-  "summary": "One line summary of upcoming demand trends"
+  "summary": "One line summary of upcoming grocery demand trends"
 }
 
 Rules:
+- ONLY include grocery/food items (no electronics, clothing, decorations)
 - Include festivals in the next 60 days
-- 3-6 products per festival
-- 3-5 general trending products based on season
-- Use realistic Indian market context
+- 3-6 grocery products per festival (e.g. ghee, sugar, rice, dal, specific spices, dry fruits, milk, paneer, specific vegetables/fruits used in festival cooking)
+- 3-5 general trending grocery products based on season
+- Use realistic Indian wholesale market prices and contexts
 - Include major festivals: Diwali, Holi, Pongal, Eid, Navratri, Christmas, Onam, Ganesh Chaturthi, Raksha Bandhan, etc.
-- Also consider regional festivals based on location if provided`,
+- Also consider regional food preferences based on location if provided
+- Focus on items kirana stores and grocery vendors would stock`,
           },
           {
             role: "user",
