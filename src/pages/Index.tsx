@@ -71,10 +71,6 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (session) fetchWeather();
-  }, [session]);
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setSession(null);
@@ -99,11 +95,14 @@ const Index = () => {
   };
 
   useEffect(() => {
-    if (session && navigator.geolocation) {
+    if (!session) return;
+    if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-        () => {}
+        () => fetchWeather()
       );
+    } else {
+      fetchWeather();
     }
   }, [session]);
 
