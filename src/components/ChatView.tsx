@@ -137,13 +137,26 @@ const ChatView = () => {
                   </div>
                 )}
                 <div
-                  className={`max-w-[70%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                  className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                     msg.role === "user"
                       ? "gradient-warm text-primary-foreground rounded-br-md"
                       : "bg-muted text-foreground rounded-bl-md"
                   }`}
                 >
-                  <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0">
+                  <div className="prose prose-sm max-w-none dark:prose-invert
+                    prose-p:my-1.5 prose-p:leading-relaxed
+                    prose-ul:my-2 prose-ul:pl-4 prose-ol:my-2 prose-ol:pl-4
+                    prose-li:my-0.5 prose-li:leading-relaxed
+                    prose-headings:font-display prose-headings:font-bold prose-headings:mt-3 prose-headings:mb-1.5
+                    prose-h1:text-base prose-h2:text-sm prose-h3:text-sm
+                    prose-strong:text-foreground prose-strong:font-bold
+                    prose-table:text-xs prose-table:border prose-table:border-border
+                    prose-th:bg-muted prose-th:px-3 prose-th:py-1.5 prose-th:text-left prose-th:font-bold prose-th:border prose-th:border-border
+                    prose-td:px-3 prose-td:py-1.5 prose-td:border prose-td:border-border
+                    prose-code:bg-background prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono
+                    prose-blockquote:border-l-2 prose-blockquote:border-primary prose-blockquote:pl-3 prose-blockquote:italic prose-blockquote:text-muted-foreground
+                    prose-hr:my-3 prose-hr:border-border
+                  ">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
                 </div>
