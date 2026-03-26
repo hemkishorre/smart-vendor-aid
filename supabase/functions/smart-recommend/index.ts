@@ -63,11 +63,13 @@ serve(async (req) => {
     if (existingProducts && existingProducts.length > 0) {
       const items = existingProducts
         .filter((p: any) => p.name)
-        .map((p: any) => `${p.name} (${p.quantity} ${p.unit} at ₹${p.pricePerUnit}/${p.unit})`)
+        .map((p: any) => `${p.name} (planned: ${p.quantity} ${p.unit} at ₹${p.pricePerUnit}/${p.unit})`)
         .join(", ");
       if (items) {
-        userMessage += ` I already plan to buy: ${items}. Suggest additional products with the remaining budget.`;
+        userMessage += ` I already plan to buy these products: ${items}. For EACH of my listed products, tell me the OPTIMAL quantity I should actually buy (it may be more or less than what I planned) based on weather, shelf life, and demand. Then suggest additional products with the remaining budget. Include my products in the recommendations list with adjusted quantities and clear reasoning.`;
       }
+    } else {
+      userMessage += ` Suggest the best grocery products to stock today with optimal quantities to minimize loss.`;
     }
 
     const response = await fetch(
